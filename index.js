@@ -2,6 +2,7 @@ const readline = require("readline")
 
 const mineflayer = require('mineflayer')
 const { printSchem } = require("./printer")
+const { Vec3 } = require("vec3")
 const mineflayerViewer = require('prismarine-viewer').mineflayer
 const pathfinder = require('mineflayer-pathfinder').pathfinder
 const Movements = require('mineflayer-pathfinder').Movements
@@ -12,7 +13,7 @@ let bot = mineflayer.createBot({
     username: 'jordany228', // minecraft username
     auth: 'offline', // for offline mode servers, you can set this to 'offline'
     // port: 25565,                // only set if you need a port that isn't 25565
-    version: "1.20",             // only set if you need a specific version or snapshot (ie: "1.8.9" or "1.16.5"), otherwise it's set automatically
+    version: "1.19",             // only set if you need a specific version or snapshot (ie: "1.8.9" or "1.16.5"), otherwise it's set automatically
     // password: '12345678'        // set if you want to use password-based auth (may be unreliable)
 })
 const rl = readline.createInterface({
@@ -24,16 +25,24 @@ bot.loadPlugin(pathfinder)
 rl.on('line', (ln) => {
     const defaultMove = new Movements(bot)
     bot.pathfinder.setMovements(defaultMove)
-    switch(true) {
+    switch (true) {
         case /\$gotoserver/.test(ln):
             bot.pathfinder.setGoal(new GoalNear(-8, 66, 0, 1))
-            setTimeout(()=> {
+            setTimeout(() => {
                 bot.activateBlock(bot.blockInSight(3))
             }, 5000)
-        break
-        case /\$print/.test(ln):
-            printSchem(bot, "./schematics/billy.schem")
-        break
+            break
+        case /\$print /.test(ln):
+            printSchem(bot, `./schematics/${ln.split(" ")[3]}`,
+                new Vec3(
+                    parseFloat(ln.split(" ")[1].split(";")[0]),
+                    0,
+                    parseFloat(ln.split(" ")[1].split(";")[1]),
+                ),
+                ln.split(" ")[2],
+                parseInt(ln.split(" ")[4])
+            )
+            break
         case /\$goto (.+)/.test(ln):
 
             bot.pathfinder.setGoal(new GoalNear(
@@ -42,10 +51,10 @@ rl.on('line', (ln) => {
                 parseFloat(ln.split(" ")[1].split(";")[2]),
                 0.2
             ))
-        break
+            break
         case /\$getpos/.test(ln):
             console.log(bot.entity.position)
-        break
+            break
 
         default:
             bot.chat(ln)
@@ -81,14 +90,14 @@ bot.on('message', function (message) {
 })
 
 bot.once('spawn', () => {
-    
+
 })
 // Log errors and kick reasons:
 bot.on('kicked', (reason, loggedIn) => {
     console.log('kicked')
     console.log(reason, loggedIn)
     console.log("reconecting after 5 seconds...")
-    setTimeout(()=>{
+    setTimeout(() => {
         bot._client.connect(25565, "craftoriya.com")
     }, 5000)
 })
